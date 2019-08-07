@@ -6,7 +6,7 @@ foreach ($file in $files) {
     $fullpath = $file.FullName
     if ($fullpath -like "*.exe") {
         $outpath = $fullpath + ".BF.exe"
-        .\FATTACATTAPILLA.exe $fullpath $outpath PleaseDontLookOK
+        .\FATTACATTAPILLA.exe $fullpath $outpath W1SeFEbE6glCLofPkjxsKw00
         #$output = "match " + $fullpath
         #$output >> catta.log
     }
