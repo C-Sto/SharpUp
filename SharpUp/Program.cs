@@ -507,6 +507,103 @@ namespace SharpUp
             }
         }
 
+        static public bool IsDirectoryWritable(string dirPath, bool throwIfFails = false)
+        {
+            try
+            {
+                using (FileStream fs = File.Create(
+                    Path.Combine(
+                        dirPath,
+                        Path.GetRandomFileName()
+                    ),
+                    1,
+                    FileOptions.DeleteOnClose)
+                )
+                { }
+                return true;
+            }
+            catch
+            {
+                if (throwIfFails)
+                    throw;
+                else
+                    return false;
+            }
+        }
+
+        public static void GetDotNetAppDomainHijacks()
+        {
+            try
+            {
+                // finds any service binaries that the current can modify
+                //      TODO: or modify the parent folder
+
+                ManagementObjectSearcher wmiData = new ManagementObjectSearcher(@"root\cimv2", "SELECT * FROM win32_service");
+                ManagementObjectCollection data = wmiData.Get();
+
+                Console.WriteLine("\r\n\r\n=== Hijackable DotNet Services ===\r\n");
+
+
+                foreach (ManagementObject result in data)
+                {
+                    if (result["PathName"] != null)
+                    {
+                        Match path = Regex.Match(result["PathName"].ToString(), @"^\W*([a-z]:\\.+?(\.exe|\.dll|\.sys))\W*", RegexOptions.IgnoreCase);
+                        String binaryPath = path.Groups[1].ToString();
+                        //Console.WriteLine(binaryPath);
+
+                        if (!binaryPath.ToLower().Contains(@"c:\windows\system32\svchost.exe"))
+                        {
+                            try
+                            {
+                                AssemblyName.GetAssemblyName(binaryPath);
+                                Console.WriteLine("\n");
+                                Console.WriteLine("  Name             : {0}", result["Name"]);
+                                Console.WriteLine("  DisplayName      : {0}", result["DisplayName"]);
+                            }
+                            catch (BadImageFormatException e)
+                            {
+                                //Console.WriteLine(e);
+
+                                continue;
+                            }
+                            Console.WriteLine(binaryPath + " is a .NET assembly.");
+                            string dirpath = Path.GetDirectoryName(binaryPath).ToString();
+                            String configPath = binaryPath + ".config";
+                            if (!File.Exists(configPath))
+                            {
+                                Console.WriteLine("...and it doesn't have a matching .config file in its directory.");
+                            }
+                            if (IsDirectoryWritable(dirpath))
+                            {
+                                Console.WriteLine("...and this user has the ability to create files in that dir.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("...but this user can't write into that dir.");
+                            }
+                        }
+                        //Console.WriteLine(dirpath);
+
+
+                        //if (CheckModifiableAccess(binaryPath))
+                        //{
+                        //    Console.WriteLine("  Name             : {0}", result["Name"]);
+                        //    Console.WriteLine("  DisplayName      : {0}", result["DisplayName"]);
+                        //    Console.WriteLine("  Description      : {0}", result["Description"]);
+                        //    Console.WriteLine("  State            : {0}", result["State"]);
+                        //    Console.WriteLine("  StartMode        : {0}", result["StartMode"]);
+                        //    Console.WriteLine("  PathName         : {0}", result["PathName"]);
+                        //}
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(String.Format("  [X] Exception: {0}", ex.Message));
+            }
+        }
+
         public static void GetAlwaysInstallElevated()
         {
             Console.WriteLine("\r\n\r\n=== AlwaysInstallElevated Registry Keys ===\r\n");
@@ -1338,6 +1435,7 @@ namespace SharpUp
             GetModifiableServiceBinaries();
             GetUnquotedServices();
             GetAlwaysInstallElevated();
+            GetDotNetAppDomainHijacks();
             GetPathHijacks();
             GetModifiableRegistryAutoRuns();
             GetSpecialTokenGroupPrivs();
@@ -1550,6 +1648,7 @@ namespace SharpUp
 
                 watch.Stop();
                 Console.WriteLine(String.Format("\r\n\r\n[*] Completed Privesc Checks in {0} seconds\r\n", watch.ElapsedMilliseconds / 1000));
+                Console.ReadLine();
             }
         }
     }
