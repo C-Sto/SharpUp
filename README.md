@@ -6,6 +6,11 @@ SharpUp is a C# port of various [PowerUp](https://github.com/PowerShellMafia/Pow
 
 [@harmj0y](https://twitter.com/harmj0y) is the primary author.
 
+[@mikeloss](https://twitter.com/mikeloss) mangled it a bit, and added the check for dropping a .config next to a .net service binary.
+
+He also took a bunch of PRs from the GhostPack/SharpUp repo and merged them in because they looked good.
+They were by: Raikia, RemiEscourrou, Coder666, e0x70i, cnotin, and vysecurity.
+
 SharpUp is licensed under the BSD 3-Clause license.
 
 ## Usage
