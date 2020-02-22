@@ -535,8 +535,7 @@ namespace SharpUp
         {
             try
             {
-                // finds any service binaries that the current can modify
-                //      TODO: or modify the parent folder
+                // finds any service binaries where the current user can drop a .config in the directory.
 
                 ManagementObjectSearcher wmiData = new ManagementObjectSearcher(@"root\cimv2", "SELECT * FROM win32_service");
                 ManagementObjectCollection data = wmiData.Get();
@@ -557,9 +556,6 @@ namespace SharpUp
                             try
                             {
                                 AssemblyName.GetAssemblyName(binaryPath);
-                                Console.WriteLine("\n");
-                                Console.WriteLine("  Name             : {0}", result["Name"]);
-                                Console.WriteLine("  DisplayName      : {0}", result["DisplayName"]);
                             }
                             catch (BadImageFormatException e)
                             {
@@ -567,34 +563,23 @@ namespace SharpUp
 
                                 continue;
                             }
-                            Console.WriteLine(binaryPath + " is a .NET assembly.");
                             string dirpath = Path.GetDirectoryName(binaryPath).ToString();
                             String configPath = binaryPath + ".config";
+
                             if (!File.Exists(configPath))
                             {
-                                Console.WriteLine("...and it doesn't have a matching .config file in its directory.");
-                            }
-                            if (IsDirectoryWritable(dirpath))
-                            {
-                                Console.WriteLine("...and this user has the ability to create files in that dir.");
-                            }
-                            else
-                            {
-                                Console.WriteLine("...but this user can't write into that dir.");
+                                if (IsDirectoryWritable(dirpath))
+                                {
+                                    Console.WriteLine("\n");
+                                    Console.WriteLine("  Name             : {0}", result["Name"]);
+                                    Console.WriteLine("  DisplayName      : {0}", result["DisplayName"]);
+                                    Console.WriteLine("  Description      : {0}", result["Description"]);
+                                    Console.WriteLine("  State            : {0}", result["State"]);
+                                    Console.WriteLine("  StartMode        : {0}", result["StartMode"]);
+                                    Console.WriteLine("  PathName         : {0}", result["PathName"]);
+                                }
                             }
                         }
-                        //Console.WriteLine(dirpath);
-
-
-                        //if (CheckModifiableAccess(binaryPath))
-                        //{
-                        //    Console.WriteLine("  Name             : {0}", result["Name"]);
-                        //    Console.WriteLine("  DisplayName      : {0}", result["DisplayName"]);
-                        //    Console.WriteLine("  Description      : {0}", result["Description"]);
-                        //    Console.WriteLine("  State            : {0}", result["State"]);
-                        //    Console.WriteLine("  StartMode        : {0}", result["StartMode"]);
-                        //    Console.WriteLine("  PathName         : {0}", result["PathName"]);
-                        //}
                     }
                 }
             }
